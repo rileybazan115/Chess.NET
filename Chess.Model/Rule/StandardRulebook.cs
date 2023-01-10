@@ -11,7 +11,8 @@ namespace Chess.Model.Rule
     using Chess.Model.Game;
     using Chess.Model.Piece;
     using Chess.Model.Visitor;
-    using System.Collections.Generic;
+	using System;
+	using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
 
@@ -81,7 +82,7 @@ namespace Chess.Model.Rule
                 var empty = ImmutableSortedDictionary.Create<Position, ChessPiece>(PositionComparer.DefaultComparer);
                 return pieces.Aggregate(empty, (s, p) => s.Add(p.Position, p.Piece));
             }
-
+            
             var whitePlayer = new Player(Color.White);
             var whitePieces = makePieces(1, 0, Color.White);
             var blackPlayer = new Player(Color.Black);
@@ -90,6 +91,132 @@ namespace Chess.Model.Rule
 
             return new ChessGame(board, whitePlayer, blackPlayer);
         }
+
+        public ChessGame Create960Game()
+		{
+            List<PlacedPiece> placedPieces = new List<PlacedPiece>();
+
+            //create a list of positions, then as pieces are added, remove that psotion from the list
+            IEnumerable<PlacedPiece> make960Line(int row, Color color)
+            {
+                List<Position> positionList = new List<Position>();
+                List<Position> bishopList = new List<Position>();
+
+                positionList.Add(new Position(row, 0));
+                positionList.Add(new Position(row, 1));
+                positionList.Add(new Position(row, 2));
+                positionList.Add(new Position(row, 3));
+                positionList.Add(new Position(row, 4));
+                positionList.Add(new Position(row, 5));
+                positionList.Add(new Position(row, 6));
+                positionList.Add(new Position(row, 7));
+
+                //generate random number from list
+                //remove position from list
+                //repeat
+                Random random = new Random();
+                int index = 0;
+                int previousIndex = 0;
+                bool g;
+
+                //spawn king, can't spawn in corner
+                index = random.Next(1, positionList.Count - 1);
+                placedPieces.Add(new PlacedPiece(positionList[index], new King(color)));
+                yield return new PlacedPiece(positionList[index], new King(color));
+                positionList.RemoveAt(index);
+
+                //spawn left rook
+                previousIndex = index;
+                index = random.Next(0, previousIndex);
+                placedPieces.Add(new PlacedPiece(positionList[index], new Rook(color)));
+                yield return new PlacedPiece(positionList[index], new Rook(color));
+                positionList.RemoveAt(index);
+
+
+                //spawn right rook
+                index = random.Next(previousIndex - 1, positionList.Count);
+                placedPieces.Add(new PlacedPiece(positionList[index], new Rook(color)));
+                yield return new PlacedPiece(positionList[index], new Rook(color));
+                positionList.RemoveAt(index);
+
+
+                //spawn bishop, know if bishop spawned on white of black
+                index = random.Next(0, positionList.Count);
+                if (positionList[index].Column % 2 == 0) { g = true; } else { g = false; }
+                placedPieces.Add(new PlacedPiece(positionList[index], new Bishop(color)));
+                yield return new PlacedPiece(positionList[index], new Bishop(color));
+                positionList.RemoveAt(index);
+
+                //other bishop
+                if (!g)
+                {
+                    foreach (Position position in positionList)
+                    {
+                        if (position.Column % 2 == 0)
+                        {
+                            bishopList.Add(position);
+                        }
+                    }
+                }
+                if (g)
+                {
+                    foreach (Position position in positionList)
+                    {
+                        if (position.Column % 2 != 0)
+                        {
+                            bishopList.Add(position);
+                        }
+                    }
+                }
+                index = random.Next(0, bishopList.Count);
+                placedPieces.Add(new PlacedPiece(positionList[index], new Bishop(color)));
+                yield return new PlacedPiece(bishopList[index], new Bishop(color));
+                positionList.Remove(bishopList[index]);
+
+                //only three positions left
+                //first knight
+                index = random.Next(0, positionList.Count);
+                placedPieces.Add(new PlacedPiece(positionList[index], new Knight(color)));
+                yield return new PlacedPiece(positionList[index], new Knight(color));
+                positionList.RemoveAt(index);
+
+                //other knight
+                index = random.Next(0, positionList.Count);
+                placedPieces.Add(new PlacedPiece(positionList[index], new Knight(color)));
+                yield return new PlacedPiece(positionList[index], new Knight(color));
+                positionList.RemoveAt(index);
+
+                //queen
+                placedPieces.Add(new PlacedPiece(positionList[0], new Queen(color)));
+                yield return new PlacedPiece(positionList[0], new Queen(color));
+            }
+
+            IEnumerable<PlacedPiece> makePawns(int row, Color color) =>
+               Enumerable.Range(0, 8).Select(
+                   i => new PlacedPiece(new Position(row, i), new Pawn(color))
+               );
+
+            
+
+            IImmutableDictionary<Position, ChessPiece> makePieces(int pawnRow, int baseRow, Color color)
+            {
+                var pawns = makePawns(pawnRow, color);
+                var baseLine = make960Line(baseRow, color);
+                var pieces = baseLine.Union(pawns);
+                var empty = ImmutableSortedDictionary.Create<Position, ChessPiece>(PositionComparer.DefaultComparer);
+                return pieces.Aggregate(empty, (s, p) => s.Add(p.Position, p.Piece));
+            }
+
+            var whitePlayer = new Player(Color.White);
+            var whitePieces = makePieces(1, 0, Color.White);
+            var blackPlayer = new Player(Color.Black);
+            var blackPieces = makePieces(6, 7, Color.Black);
+            //var blackPieces = new Dictionary<Position, ChessPiece> { { placedPieces[0].Position, placedPieces[0].Piece } };
+            
+            var board = new Board(whitePieces.AddRange(blackPieces));
+
+            return new ChessGame(board, whitePlayer, blackPlayer);
+		}
 
         /// <summary>
         /// Gets the status of a chess game, according to the standard rulebook.

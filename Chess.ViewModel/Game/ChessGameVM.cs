@@ -130,6 +130,24 @@ namespace Chess.ViewModel.Game
             }
         }
 
+        //new 960 chess game
+        public GenericCommand Chess960Command
+        {
+            get
+            {
+                return new GenericCommand
+                (
+                    () => true,
+                    () =>
+                    {
+                        this.Game = this.rulebook.Create960Game();
+                        this.Board = new BoardVM(this.Game.Board);
+                        this.OnPropertyChanged(nameof(this.Status));
+                    }
+                );
+            }
+        }
+
         /// <summary>
         /// Gets the command that reverts the last action of the presented chess game.
         /// </summary>

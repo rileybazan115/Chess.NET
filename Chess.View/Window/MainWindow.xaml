@@ -32,18 +32,23 @@
                         <icon:NewIcon />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Undo" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z">
+				<MenuItem Header="New 960 Game" Command="{Binding Chess960Command}" InputGestureText="Ctrl+P">
+					<MenuItem.Icon>
+						<icon:NewIcon />
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Undo" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z">
                     <MenuItem.Icon>
                         <icon:UndoIcon />
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="Exit" Click="ExitClick">
-                    <MenuItem.Icon>
-                        <icon:ExitIcon />
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
+				<MenuItem Header="Exit" Click="ExitClick">
+					<MenuItem.Icon>
+						<icon:ExitIcon />
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
             <MenuItem HorizontalAlignment="Right">
                 <MenuItem.Header>
                     <TextBlock Text="{Binding Status, Converter={StaticResource statusConverter}}" />

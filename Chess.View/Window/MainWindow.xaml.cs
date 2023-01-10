@@ -104,5 +104,10 @@ namespace Chess.View.Window
                     ? promotions[selectedPiece]
                     : null;
         }
-    }
+
+		private void ExitClick(object sender, RoutedEventArgs e)
+		{
+
+		}
+	}
 }
